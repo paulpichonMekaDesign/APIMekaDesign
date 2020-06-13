@@ -88,7 +88,7 @@ class ControladorCliente{
      public function create($datos){
 
           // validar nombre
-          if ( isset($datos["nombre"]) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚ]+$/', $datos["nombre"]) ) {
+         if ( isset($datos["nombre"]) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚ]+$/', $datos["nombre"]) ) {
                
                $json = array(
 
@@ -172,6 +172,10 @@ class ControladorCliente{
           $datos = array("nombre"=>$datos["nombre"],
                          "apellido"=>$datos["apellido"],
                          "correo"=>$datos["correo"],
+                         "password"=>$datos["password"],
+                         "imagenRuta"=>$datos["imagenRuta"],
+                         "tipoUsuario"=>$datos["tipoUsuario"],
+                         "hash"=>$datos["hash"],
                          "id_cliente"=>$id_cliente,
                          "llave_secreta"=>$llave_secreta
                     );
@@ -202,12 +206,76 @@ class ControladorCliente{
      /**************** mostrar un solo usuario ****************************/
 
      public function show($id){
+           /***************************************/
+          /* VALIDAR LAS CREDENCIALES DEL USUARIO*/
+          /***************************************/
+          $usuarios = ModeloUsuarios::index("usuarios");
 
-          $json = array(
+          if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
 
-               "detalle" => "mostrando el usuario con id ".$id
+               foreach ($usuarios as $key => $valueUsuario) {
 
-          );
+                    if ("Basic ".base64_encode($_SERVER['PHP_AUTH_USER']).":".($_SERVER['PHP_AUTH_PW']) == "Basic ".base64_encode($valueUsuario["id_cliente"]).":".($valueUsuario["llave_secreta"])) {
+                         
+                         // mostrar todos los usuarios 
+                         //peticion al modelo
+                         $usuario = ModeloUsuarios::show("usuarios", $id);
+
+                         if (!empty($usuario)) {
+               
+                              $json = array(
+
+                                   "status" => 200,
+                                   "detalle" => $usuario
+     
+                              );
+     
+                              echo json_encode($json, true);
+     
+                              return;
+               
+                         } else {
+                              
+                              $json = array(
+               
+                                   "status" => 200,
+                                   "total_registros" => 0,
+                                   "detalle" => "No hay ningún usuario registrado con ese Id"
+               
+                              );
+               
+                              echo json_encode($json, true);
+               
+                              return;
+               
+                         }
+
+                    }else {
+                         
+                         $json = array(
+
+                              "status" => 404,
+                              "detalle" => "Token inválido"
+
+                         );
+
+                         
+                    }
+                    
+               }
+               
+
+          }else {
+               
+               $json = array(
+
+                    "status" => 404,
+                    "detalle" => "Debes tener una autorizacion para esa peticion"
+
+               );
+
+               
+          }
 
           echo json_encode($json, true);
 
@@ -217,13 +285,74 @@ class ControladorCliente{
 
      /**************** editar un usuario ****************************/
 
-     public function update($id){
+     public function update($id, $datos){
 
-          $json = array(
+          /***************************************/
+          /* VALIDAR LAS CREDENCIALES DEL USUARIO*/
+          /***************************************/
+          $usuarios = ModeloUsuarios::index("usuarios");
 
-               "detalle" => "usuario actualizado con id ".$id
 
-          );
+          if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+
+               foreach ($usuarios as $key => $valueUsuario) {
+
+                    if ("Basic ".base64_encode($_SERVER['PHP_AUTH_USER']).":".($_SERVER['PHP_AUTH_PW']) == "Basic ".base64_encode($valueUsuario["id_cliente"]).":".($valueUsuario["llave_secreta"])) {
+                         
+
+                         // llevar datos al modelo
+                         //************************
+                         $datos = array("id"=>$id,
+                                        "nombre"=>$datos["nombre"],
+                                        "apellido"=>$datos["apellido"],
+                                        "correo"=>$datos["correo"],
+                                        "password"=>$datos["password"],
+                                        "imagenRuta"=>$datos["imagenRuta"],
+                                        "tipoUsuario"=>$datos["tipoUsuario"]
+                                   );
+                         
+                         $create = ModeloUsuarios::update("usuarios", $datos);
+
+                         if ($create == "ok") {
+                              
+                              $json = array(
+                                   "status" => 200,
+                                   "detalle" => "Actualizacion correcta, la informacion del usuario ha sido modificada"
+                              );
+
+                              echo json_encode($json, true);
+
+                              return;
+
+                         }
+
+
+
+                    }else {
+                         
+                         $json = array(
+
+                              "status" => 404,
+                              "detalle" => "Token inválido"
+
+                         );
+                         
+                    }
+                    
+               }
+               
+
+          }else {
+               
+               $json = array(
+
+                    "status" => 404,
+                    "detalle" => "Debes tener una autorizacion para esa peticion"
+
+               );
+
+               
+          }
 
           echo json_encode($json, true);
 

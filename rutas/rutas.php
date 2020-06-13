@@ -55,7 +55,12 @@ if (count(array_filter($arrayRutas)) == 0) {
                     // capturar datos para registrar usuario
                     $datos = array("nombre" => $_POST["nombre"],
                                    "apellido" => $_POST["apellido"],
-                                   "correo" => $_POST["correo"]
+                                   "correo" => $_POST["correo"],
+                                   "password" => $_POST["password"],
+                                   "imagenRuta" => $_POST["imagenRuta"],
+                                   "tipoUsuario" => $_POST["tipoUsuario"],
+                                   "hash" => $_POST["hash"]
+
                     );
 
                
@@ -101,7 +106,9 @@ if (count(array_filter($arrayRutas)) == 0) {
           /* cuando se hace peticion desde un solo usuario ********
           *********************************************************/
 
-          if (array_filter($arrayRutas)[1] == "usuarios" && is_numeric(array_filter($arrayRutas)[2])) {
+          // para poder comparar el hash del id_cliente se quitao la siguiente funcion para que no solo permita numeros is_numeric()
+          //is_numeric(array_filter($arrayRutas)[2])
+          if (array_filter($arrayRutas)[1] == "usuarios" && array_filter($arrayRutas)[2]) {
 
                // peticiones de tipo "GET"
                 //mostrando todos los registros de usuarios
@@ -117,9 +124,17 @@ if (count(array_filter($arrayRutas)) == 0) {
                 //Editar un usuario por ID
           
                 else if (isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "PUT") {
-               
+
+                    //Capturar datos
+                    //---------------------
+                    // se nesecita de funciones especiales para poder parcear la cadena que  viene en la URL
+                    $datos = array();
+
+                    parse_str(file_get_contents('php://input'), $datos);
+                    /* print_r($datos);
+                    return; */
                     $editarUsuarios = new ControladorCliente();
-                    $editarUsuarios -> update(array_filter($arrayRutas)[2]);
+                    $editarUsuarios -> update(array_filter($arrayRutas)[2], $datos);
 
                }
 
