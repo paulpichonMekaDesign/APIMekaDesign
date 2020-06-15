@@ -311,9 +311,9 @@ class ControladorCliente{
                                         "tipoUsuario"=>$datos["tipoUsuario"]
                                    );
                          
-                         $create = ModeloUsuarios::update("usuarios", $datos);
+                         $update = ModeloUsuarios::update("usuarios", $datos);
 
-                         if ($create == "ok") {
+                         if ($update == "ok") {
                               
                               $json = array(
                                    "status" => 200,
@@ -364,11 +364,66 @@ class ControladorCliente{
 
      public function delete($id){
 
-          $json = array(
+          /***************************************/
+          /* VALIDAR LAS CREDENCIALES DEL USUARIO*/
+          /***************************************/
+          $usuarios = ModeloUsuarios::index("usuarios");
 
-               "detalle" => "usuario eliminado con id ".$id
 
-          );
+          if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+
+               foreach ($usuarios as $key => $valueUsuario) {
+
+                    if ("Basic ".base64_encode($_SERVER['PHP_AUTH_USER']).":".($_SERVER['PHP_AUTH_PW']) == "Basic ".base64_encode($valueUsuario["id_cliente"]).":".($valueUsuario["llave_secreta"])) {
+                         
+
+                         // llevar datos al modelo
+                         //************************
+                         $delete = ModeloUsuarios::delete("usuarios", $id);
+
+                         //respuesta del modelo
+                         //----------------------------------
+
+                         if ($delete == "ok") {
+                              
+                              $json = array(
+                                   "status" => 200,
+                                   "detalle" => "Se ha eliminado con exito"
+                              );
+
+                              echo json_encode($json, true);
+
+                              return;
+
+                         }
+
+
+
+                    }else {
+                         
+                         $json = array(
+
+                              "status" => 404,
+                              "detalle" => "Token inválido"
+
+                         );
+                         
+                    }
+                    
+               }
+               
+
+          }else {
+               
+               $json = array(
+
+                    "status" => 404,
+                    "detalle" => "Debes tener una autorizacion para esa peticion"
+
+               );
+
+               
+          }
 
           echo json_encode($json, true);
 

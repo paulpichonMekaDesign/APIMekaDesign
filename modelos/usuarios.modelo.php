@@ -118,4 +118,27 @@ class ModeloUsuarios{
 
      }
 
+     //borrar curos
+     static public function delete($tabla, $id){
+
+          $statement = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE hash = :id");
+
+          $statement -> bindParam(":id", $id, PDO::PARAM_STR);
+
+          if ($statement -> execute()) {
+               
+               return "ok";
+
+          }else{
+
+               print_r(Conexion::conectar()->errorInfo());
+
+          }
+
+          $statement -> close();
+
+          $statement = null;
+
+     }
+
 }
